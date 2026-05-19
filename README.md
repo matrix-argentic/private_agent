@@ -174,23 +174,23 @@ private_agent/
 
 ## TODO 列表
 
-[x] 前端页面搭建
-[x] 后端接口搭建
-[x] agent 聊天历史模块
-[x] agent 短期记忆 滑动窗口+异步sumarize模块
-[] agent 长期记忆模块（语义记忆，情景记忆，程序记忆）
-[x] 知识库数据解析文档化（markdown,mineru,html,txt）
-[] 知识库数据解析优化（pdf解析改成使用unstructred，自定义解析规则）
-[] 知识库文档化优化（优化父子文档和元数据，提高召回率）
-[x] 知识库检索
-[] 知识库检索优化，BM25关键字多路召回配合父子文档以及大模型rerank重排
-[] self rag，自监督机制。
-[x] langfuse监控graph执行
-[] langfuse处理rag的retriever系统，并设置LLM-as-judge的脚本
-[] langfuse管理prompt，模型以及相关版本发布。
-[] 前后端接入langfuse 打分系统，增加用户反馈的渠道。
-[] 增加真正意义的多conversation，多用户支持。
-[] 重构一版本flutter的支持桌面以及相关后台以及llm的配置化。
-[] 重构脱离langfuse，自我实现相关监控，prompt版本发布以及score反馈的版本。
-[] docker化，服务器部署docker服务，桌面，或者移动端安装对应应用或者直接访问web页面。
-[] 重构sqlite为postgres或者mysql，或者可以动态配置。包括向量数据库最好也可以动态配置。
+- [x] 前端页面搭建
+- [x] 后端接口搭建
+- [x] agent 聊天历史模块
+- [x] agent 短期记忆 滑动窗口+异步sumarize模块
+- [ ] agent 长期记忆模块（语义记忆，情景记忆，程序记忆）
+- [x] 知识库数据解析文档化（markdown,mineru,html,txt）
+- [ ] 知识库数据解析优化（pdf解析改成使用unstructred，自定义解析规则）
+- [ ] 知识库文档化优化（优化父子文档和元数据，提高召回率）
+- [x] 知识库检索
+- [ ] 知识库检索优化，BM25关键字多路召回配合父子文档以及大模型rerank重排
+- [ ] self rag，自监督机制。
+- [x] langfuse监控graph执行
+- [ ] langfuse处理rag的retriever系统，并设置LLM-as-judge的脚本
+- [ ] langfuse管理prompt，模型以及相关版本发布。
+- [ ] 前后端接入langfuse 打分系统，增加用户反馈的渠道。
+- [ ] 增加真正意义的多conversation，多用户支持。
+- [ ] 重构一版本flutter的支持桌面以及相关后台以及llm的配置化。
+- [ ] 重构脱离langfuse，自我实现相关监控，prompt版本发布以及score反馈的版本。
+- [ ] docker化，服务器部署docker服务，桌面，或者移动端安装对应应用或者直接访问web页面。
+- [ ] 重构sqlite为postgres或者mysql，或者可以动态配置。包括向量数据库最好也可以动态配置。
