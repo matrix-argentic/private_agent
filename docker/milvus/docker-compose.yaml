@@ -1,0 +1,157 @@
+services:
+  etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.18
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=2147483648 # 降至2GB
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    restart: unless-stopped
+
+  minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_API_REQUESTS_MAX: 5000 # 降低并发
+      MINIO_API_REQUESTS_DEADLINE: 10s
+      # 内存优化
+      MINIO_CACHE_QUOTA: 20
+      MINIO_CACHE_AFTER: 3
+      MINIO_CACHE_WATERMARK_LOW: 70
+      MINIO_CACHE_WATERMARK_HIGH: 90
+    ports:
+      - "9001:9001"
+      - "9002:9000"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+    restart: unless-stopped
+
+  standalone:
+    container_name: milvus-standalone
+    image: milvusdb/milvus:v2.6.13
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      MQ_TYPE: woodpecker
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+      # StreamingNode 配置
+      STREAMING_NODE_ENABLE: "true"
+
+      # MinIO 配置
+      MINIO_USE_SSL: "false"
+      MINIO_BUCKET_NAME: "a-bucket"
+      MINIO_REQUEST_TIMEOUT_MS: 60000
+      COMMON_STORAGE_REQUEST_TIMEOUT_MS: 60000
+
+      # gRPC 配置 - 优化并发
+      GRPC_SERVER_MAX_CONCURRENT_STREAMS: 512 # 降低
+      PROXY_MAX_TASK_NUM: 5120 # 降低
+
+      # 调整超时
+      GRPC_SERVER_KEEPALIVE_TIME: 7200s
+      GRPC_SERVER_KEEPALIVE_TIMEOUT: 20s
+
+      # 消息大小限制
+      GRPC_SERVER_MAX_RECV_MSG_SIZE: 268435456 # 256MB
+      GRPC_SERVER_MAX_SEND_MSG_SIZE: 268435456
+
+      # 内存和性能优化
+      QUERY_NODE_CACHE_SIZE: 2147483648 # 2GB
+      INDEX_NODE_ENABLE_DISK: "true"
+      DATA_NODE_FLUSH_INSERT_BUFFER_SIZE: 16777216 # 16MB
+
+      # 并发控制
+      DATACOORD_SEGMENT_MAX_SIZE: 512 # MB
+      COMMON_INDEX_SLICE_SIZE: 16 # MB
+
+      # 日志级别
+      LOG_LEVEL: "info" # 减少日志输出
+
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      - etcd
+      - minio
+    # 资源限制 - 给Milvus更多资源
+    deploy:
+      resources:
+        limits:
+          cpus: "2.5"
+          memory: 8G
+        reservations:
+          cpus: "1.5"
+          memory: 4G
+    restart: unless-stopped
+
+  attu:
+    container_name: zilliz-attu
+    image: zilliz/attu:latest
+    environment:
+      MILVUS_URL: standalone:19530
+    ports:
+      - "3001:3000"
+    depends_on:
+      - standalone
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    restart: unless-stopped
+
+networks:
+  default:
+    name: milvus

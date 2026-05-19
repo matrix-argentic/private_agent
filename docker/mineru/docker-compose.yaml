@@ -1,0 +1,55 @@
+services:
+  # ── Core API ──────────────────────────────────────────────────────────────
+  # 日常开发只需要这个服务。如需可视化调试界面，用 --profile gradio 启动。
+  mineru-api:
+    image: mineru:latest
+    container_name: mineru-api
+    restart: "no" # 开发机手动控制
+    ports:
+      - 8000:8000
+    environment:
+      MINERU_MODEL_SOURCE: local
+    entrypoint: mineru-api
+    command: --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization 0.3 # ← 限制 VRAM 峰值 ~30% (RTX 5070 Ti ≈ 4.8GiB)
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    ipc: host
+    deploy:
+      resources:
+        limits:
+          memory: 8g # ← 限制系统内存上限
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+
+  # ── Web UI (按需启动) ─────────────────────────────────────────────────────
+  mineru-gradio:
+    image: mineru:latest
+    container_name: mineru-gradio
+    restart: "no"
+    profiles: ["gradio"]
+    ports:
+      - 7860:7860
+    environment:
+      MINERU_MODEL_SOURCE: local
+    entrypoint: mineru-gradio
+    command: --server-name 0.0.0.0
+      --server-port 7860
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    ipc: host
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]

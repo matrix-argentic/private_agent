@@ -1,0 +1,30 @@
+# RAG configuration (non-sensitive)
+# Environment-specific overrides go in .env
+
+# Embedding
+embedding:
+  embedding_model: ${oc.env:EMBEDDING_MODEL,BAAI/bge-m3}
+  # SiliconFlow (embedding API)
+  siliconflow_api_key: ${oc.env:SILICONFLOW_API_KEY,""}
+
+milvus:
+  milvus_uri: ${oc.env:MILVUS_URI,""}
+  milvus_user: ${oc.env:MILVUS_USERNAME,""}
+  milvus_password: ${oc.env:MILVUS_PASSWORD,""}
+  milvus_db: ${oc.env:MILVUS_DB,""}
+  milvus_timeout: ${oc.env:MILVUS_TIMEOUT,3}
+
+llm:
+  # Dashscope (LLM API)
+  dashscope_api_key: ${oc.env:DASHSCOPE_API_KEY,""}
+  dashscope_api_base: ${oc.env:DASHSCOPE_API_BASE,https://dashscope.aliyuncs.com/compatible-mode/v1}
+  dashscope_model: ${oc.env:DASHSCOPE_MODEL,qwen3.5-flash}
+
+# Auth
+auth:
+  jwt_secret: ${oc.env:JWT_SECRET,""}
+  jwt_algorithm: HS256
+  jwt_expire_minutes: 10080  # 7 days
+
+# Knowledge base
+knowledge_base_url: ${oc.env:KNOWLEDGE_BASE_URL,https://iknow.lenovo.com.cn/}
